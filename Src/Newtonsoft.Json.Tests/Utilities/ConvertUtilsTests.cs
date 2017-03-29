@@ -93,6 +93,18 @@ namespace Newtonsoft.Json.Tests.Utilities
             AssertDoubleTryParse("1E-20", ParseResult.Success, 1E-20);
             AssertDoubleTryParse("1", ParseResult.Success, 1);
             AssertDoubleTryParse("1.2", ParseResult.Success, 1.2);
+            AssertDoubleTryParse("-52.3698169", ParseResult.Success, -52.3698169);
+
+            Random rand = new Random();
+            for (int i = 0; i < 10000; ++i)
+            {
+                string s = GenerateRandomFloatingPointString(rand, 19);
+                double d;
+                double d2;
+                char[] c = s.ToCharArray();
+                Assert.AreEqual(ConvertUtils.DoubleTryParse(c, 0, c.Length, out d) == ParseResult.Success, double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out d2));
+                Assert.AreEqual(d2, d, "DoubleTryParse result is not equal to double.Parse. Input string: " + s);
+            }
 
             AssertDoubleTryParse("1E-21", ParseResult.Success, 1E-21);
             AssertDoubleTryParse("1E-22", ParseResult.Success, 1E-22);
@@ -220,6 +232,17 @@ namespace Newtonsoft.Json.Tests.Utilities
                 AssertDecimalTryParse(i.ToString(CultureInfo.InvariantCulture), ParseResult.Success, i);
             }
 
+            Random rand = new Random(42);
+            for (int i = 0; i < 100000; ++i)
+            {
+                string s = GenerateRandomFloatingPointString(rand, 28);
+                decimal d;
+                decimal d2;
+                char[] c = s.ToCharArray();
+                Assert.AreEqual(ConvertUtils.DecimalTryParse(c, 0, c.Length, out d) == ParseResult.Success, decimal.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out d2));
+                Assert.AreEqual(d, d2, "DecimalTryParse result is not equal to decimal.Parse. Input string: " + s);
+            }
+
             AssertDecimalTryParse("1E+29", ParseResult.Overflow, null);
             AssertDecimalTryParse("-1E+29", ParseResult.Overflow, null);
 
@@ -247,6 +270,23 @@ namespace Newtonsoft.Json.Tests.Utilities
             AssertDecimalTryParse("1E--23", ParseResult.Invalid, null);
             AssertDecimalTryParse("E23", ParseResult.Invalid, null);
             AssertDecimalTryParse("00", ParseResult.Invalid, null);
+        }
+        
+        private string GenerateRandomFloatingPointString(Random rand, int maxDigits)
+        {
+            int digitsCount = rand.Next(1, maxDigits + 1);
+            decimal digits = rand.Next(1, 10);
+            for (int j = 1; j < digitsCount; ++j)
+            {
+                digits = (digits * 10) + rand.Next(0, 10);
+            }
+            string s = digits.ToString();
+            int decimalPosition = rand.Next(1, digitsCount + 1);
+            if (decimalPosition < digitsCount)
+            {
+                s = s.Insert(decimalPosition, ".");
+            }
+            return s;
         }
 
         [Test]

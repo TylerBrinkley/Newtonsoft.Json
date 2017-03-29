@@ -932,6 +932,8 @@ namespace Newtonsoft.Json.Utilities
 
         private static class IEEE754
         {
+            private static readonly bool _classicRounding = (ulong)BitConverter.DoubleToInt64Bits(double.Parse("-52.3698169")) == 0xC04A2F5629018109;
+
             /// <summary>
             /// Exponents for both powers of 10 and 0.1
             /// </summary>
@@ -1109,7 +1111,7 @@ namespace Newtonsoft.Json.Utilities
                 if ((val & (1 << 10)) != 0)
                 {
                     // IEEE round to even
-                    ulong tmp = val + ((1UL << 10) - 1 + ((val >> 11) & 1));
+                    ulong tmp = val + ((1UL << 10) - 1 + (_classicRounding ? 0 : ((val >> 11) & 1)));
                     if (tmp < val)
                     {
                         // overflow
@@ -1332,7 +1334,7 @@ namespace Newtonsoft.Json.Utilities
                             }
                         }
 
-                        if (mantissaDigits < 19)
+                        if (mantissaDigits < 18)
                         {
                             mantissa = (10 * mantissa) + (ulong)(c - '0');
                             if (mantissa > 0)
